@@ -16,58 +16,63 @@
                 <div class="flex flex-wrap gap-3 justify-center xl:justify-end">
                     
                     <div x-data="tenantManager()" class="relative">
-                        <button @click="open = !open" 
+                        <button @click="open = true" 
                                 class="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition shadow-lg text-sm font-bold">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                             <span>Manage</span>
                         </button>
                         
-                        <div x-show="open" @click.away="open = false" x-transition style="display: none;" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-50 max-h-96 overflow-y-auto">
-                            <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
-                                <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Tenants List</h3>
-                            </div>
+                        <div x-show="open" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center px-4" x-transition>
+                            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" @click="open = false"></div>
                             
-                            <div class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @if($tenants->isEmpty())
-                                    <div class="p-4 text-center text-xs text-gray-400">No tenants found.</div>
-                                @else
-                                    @foreach($tenants as $tenant)
-                                    <div class="p-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                        <div class="flex items-center gap-3 overflow-hidden">
-                                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
-                                                {{ substr($tenant->name, 0, 1) }}
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden max-h-[80vh] flex flex-col">
+                                <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                                    <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Tenants List</h3>
+                                    <button @click="open = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+                                </div>
+                                
+                                <div class="overflow-y-auto p-2">
+                                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                                        @if($tenants->isEmpty())
+                                            <div class="p-4 text-center text-xs text-gray-400">No tenants found.</div>
+                                        @else
+                                            @foreach($tenants as $tenant)
+                                            <div class="p-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition rounded-lg">
+                                                <div class="flex items-center gap-3 overflow-hidden">
+                                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                                        {{ substr($tenant->name, 0, 1) }}
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">{{ $tenant->name }}</p>
+                                                        <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                                                            @if($tenant->building) {{ $tenant->building->name }} @else Unassigned @endif
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-1">
+                                                    <button @click="viewTenant({{ $tenant->id }})" class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition" title="View Details">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                    </button>
+                                                    <form action="{{ route('landlord.tenant.destroy', $tenant->id) }}" method="POST" onsubmit="return confirm('WARNING: Deleting this tenant will remove all their billing history. Continue?');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition" title="Delete Tenant">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
-                                            <div class="min-w-0">
-                                                <p class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">{{ $tenant->name }}</p>
-                                                <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                                                    @if($tenant->building) {{ $tenant->building->name }} @else Unassigned @endif
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="flex items-center gap-1">
-                                            <button @click="viewTenant({{ $tenant->id }})" class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition" title="View Details">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            </button>
-
-                                            <form action="{{ route('landlord.tenant.destroy', $tenant->id) }}" method="POST" onsubmit="return confirm('WARNING: Deleting this tenant will remove all their billing history. Continue?');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition" title="Delete Tenant">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                </button>
-                                            </form>
-                                        </div>
+                                            @endforeach
+                                        @endif
                                     </div>
-                                    @endforeach
-                                @endif
+                                </div>
                             </div>
                         </div>
 
-                        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" @click="showModal = false"></div>
-
-                                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200 dark:border-gray-700">
+                        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                                <div class="fixed inset-0 bg-gray-900 bg-opacity-80 transition-opacity backdrop-blur-sm" @click="showModal = false"></div>
+                                <div class="inline-block bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-lg border border-gray-200 dark:border-gray-700 relative z-10">
                                     <div class="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
                                         <div class="flex justify-between items-center">
                                             <h3 class="text-lg font-bold text-white flex items-center gap-2">
@@ -79,7 +84,6 @@
                                             </button>
                                         </div>
                                     </div>
-                                    
                                     <div class="p-6">
                                         <div class="flex items-center gap-4 mb-6">
                                             <div class="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500 dark:text-gray-400">
@@ -88,16 +92,13 @@
                                             <div>
                                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white" x-text="selectedTenant.name"></h2>
                                                 <p class="text-sm text-gray-500 dark:text-gray-400" x-text="selectedTenant.email"></p>
-                                                
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                                                     <span x-text="selectedTenant.phone"></span>
                                                 </p>
-
                                                 <p class="text-xs text-blue-500 font-bold mt-1">Joined: <span x-text="selectedTenant.joined"></span></p>
                                             </div>
                                         </div>
-
                                         <div class="grid grid-cols-2 gap-4 mb-6">
                                             <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
                                                 <span class="text-[10px] uppercase font-bold text-gray-400 block">Total Paid</span>
@@ -108,7 +109,6 @@
                                                 <span class="text-lg font-bold text-red-500" x-text="selectedTenant.total_pending"></span>
                                             </div>
                                         </div>
-
                                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
                                             <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Residence Info</h4>
                                             <div class="flex justify-between text-sm mb-2">
@@ -121,7 +121,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 flex justify-end rounded-b-xl border-t border-gray-100 dark:border-gray-700">
                                         <button @click="showModal = false" class="text-sm font-bold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Close</button>
                                     </div>
@@ -131,78 +130,86 @@
                     </div>
 
                     <div x-data="tenantForm()" class="relative">
-                        <button @click="open = !open" 
+                        <button @click="open = true" 
                                 class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition shadow-lg text-sm font-bold">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                             <span>+ Tenant</span>
                         </button>
                         
-                        <div x-show="open" @click.away="open = false" x-transition style="display: none;" class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-50 max-h-[90vh] overflow-y-auto">
-                            <div class="p-5">
-                                <h3 class="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                    Register Tenant
-                                </h3>
-                                <form action="{{ route('landlord.tenant.store') }}" method="POST" class="space-y-3">
-                                    @csrf
-                                    <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Name</label><input type="text" name="name" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
-                                    <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Email</label><input type="email" name="email" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
-                                    
-                                    <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Contact Number</label><input type="text" name="phone" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" placeholder="+1234567890"></div>
-                                    
-                                    <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Password</label><input type="password" name="password" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
-                                    
-                                    <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded border border-gray-100 dark:border-gray-700">
-                                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Assign Location(s)</label>
-                                        
-                                        <select name="building_id" x-model="selectedBuildingId" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-2 mb-3 focus:ring-green-500 font-bold">
-                                            <option value="" disabled selected>Select Building...</option>
-                                            <template x-for="b in buildingsData" :key="b.id">
-                                                <option :value="b.id" x-text="b.name"></option>
-                                            </template>
-                                        </select>
-
-                                        <div class="space-y-2" x-show="selectedBuildingId">
-                                            <template x-for="(unit, index) in units" :key="index">
-                                                <div class="flex gap-2 items-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600">
-                                                    
-                                                    <div class="flex-1">
-                                                        <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Floor</label>
-                                                        <select :name="'units['+index+'][floor]'" x-model="unit.floor" class="w-full border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-1 h-8">
-                                                            <option value="">Select...</option>
-                                                            <template x-for="f in availableFloors" :key="f.name">
-                                                                <option :value="f.name" x-text="'Floor ' + f.name + getFloorLabel(f.type)"></option>
-                                                            </template>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="flex-1">
-                                                        <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Unit</label>
-                                                        <select :name="'units['+index+'][room]'" x-model="unit.room" class="w-full border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-1 h-8" :disabled="!unit.floor">
-                                                            <option value="">Select...</option>
-                                                            <template x-for="r in getRoomsForFloor(unit.floor)" :key="r.number">
-                                                                <option :value="r.number" 
-                                                                        :disabled="r.status === 'Occupied'"
-                                                                        :class="r.status === 'Occupied' ? 'text-red-400 bg-red-50 dark:bg-gray-900' : 'text-green-600 font-bold'"
-                                                                        x-text="r.label + ' (' + r.status + ')'">
-                                                                </option>
-                                                            </template>
-                                                        </select>
-                                                    </div>
-
-                                                    <button type="button" @click="if(units.length > 1) units.splice(index, 1)" class="text-red-400 hover:text-red-600 mt-4" title="Remove">&times;</button>
-                                                </div>
-                                            </template>
-                                        </div>
-
-                                        <button type="button" x-show="selectedBuildingId" @click="units.push({ floor: '', room: '' })" class="mt-3 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                            Add Another Unit
-                                        </button>
+                        <div x-show="open" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center px-4" x-transition>
+                            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" @click="open = false"></div>
+                            
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+                                <div class="p-5 overflow-y-auto">
+                                    <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-2 mb-3">
+                                        <h3 class="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            Register Tenant
+                                        </h3>
+                                        <button @click="open = false" class="text-gray-400 hover:text-gray-600">&times;</button>
                                     </div>
 
-                                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded text-sm mt-2 shadow-md">Create & Assign</button>
-                                </form>
+                                    <form action="{{ route('landlord.tenant.store') }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Name</label><input type="text" name="name" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
+                                        <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Email</label><input type="email" name="email" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
+                                        
+                                        <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Contact Number</label><input type="text" name="phone" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" placeholder="+1234567890"></div>
+                                        
+                                        <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-300">Password</label><input type="password" name="password" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm p-2 focus:ring-green-500" required></div>
+                                        
+                                        <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded border border-gray-100 dark:border-gray-700">
+                                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Assign Location(s)</label>
+                                            
+                                            <select name="building_id" x-model="selectedBuildingId" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-2 mb-3 focus:ring-green-500 font-bold">
+                                                <option value="" disabled selected>Select Building...</option>
+                                                <template x-for="b in buildingsData" :key="b.id">
+                                                    <option :value="b.id" x-text="b.name"></option>
+                                                </template>
+                                            </select>
+
+                                            <div class="space-y-2" x-show="selectedBuildingId">
+                                                <template x-for="(unit, index) in units" :key="index">
+                                                    <div class="flex gap-2 items-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600">
+                                                        
+                                                        <div class="flex-1">
+                                                            <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Floor</label>
+                                                            <select :name="'units['+index+'][floor]'" x-model="unit.floor" class="w-full border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-1 h-8">
+                                                                <option value="">Select...</option>
+                                                                <template x-for="f in availableFloors" :key="f.name">
+                                                                    <option :value="f.name" x-text="'Floor ' + f.name + getFloorLabel(f.type)"></option>
+                                                                </template>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="flex-1">
+                                                            <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Unit</label>
+                                                            <select :name="'units['+index+'][room]'" x-model="unit.room" class="w-full border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-xs p-1 h-8" :disabled="!unit.floor">
+                                                                <option value="">Select...</option>
+                                                                <template x-for="r in getRoomsForFloor(unit.floor)" :key="r.number">
+                                                                    <option :value="r.number" 
+                                                                            :disabled="r.status === 'Occupied'"
+                                                                            :class="r.status === 'Occupied' ? 'text-red-400 bg-red-50 dark:bg-gray-900' : 'text-green-600 font-bold'"
+                                                                            x-text="r.label + ' (' + r.status + ')'">
+                                                                    </option>
+                                                                </template>
+                                                            </select>
+                                                        </div>
+
+                                                        <button type="button" @click="if(units.length > 1) units.splice(index, 1)" class="text-red-400 hover:text-red-600 mt-4" title="Remove">&times;</button>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <button type="button" x-show="selectedBuildingId" @click="units.push({ floor: '', room: '' })" class="mt-3 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                Add Another Unit
+                                            </button>
+                                        </div>
+
+                                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded text-sm mt-2 shadow-md">Create & Assign</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -330,58 +337,62 @@
                             get totalUtilities() { return parseInt(this.elec || 0) + parseInt(this.water || 0) + parseInt(this.gas || 0) + parseInt(this.internet || 0); },
                             get grandTotal() { return parseInt(this.rent || 0) + this.totalUtilities + parseInt(this.maintenance || 0) + parseInt(this.arrears || 0); }
                           }" class="relative">
-                        <button @click="open = !open" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-lg text-sm font-bold">
+                        <button @click="open = true" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-lg text-sm font-bold">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             <span>+ Create Invoice</span>
                         </button>
                         
-                        <div x-show="open" @click.away="open = false" x-transition style="display: none;" class="absolute right-0 mt-2 w-[500px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
-                            <div class="bg-blue-600 p-4 text-white flex justify-between items-center shadow-md">
-                                <h3 class="font-bold uppercase tracking-wide text-xs">New Invoice & Proofs</h3>
-                                <button @click="open = false" class="text-blue-200 hover:text-white">&times;</button>
-                            </div>
-                            <div class="p-5 max-h-[80vh] overflow-y-auto">
-                                <form action="{{ route('landlord.bill.store') }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
-                                    <div class="grid grid-cols-2 gap-3 mb-4">
-                                        <div class="col-span-2">
-                                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tenant</label>
-                                            <select name="tenant_id" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm bg-gray-50 p-2 font-bold">
-                                                @foreach($tenants as $tenant)<option value="{{ $tenant->id }}">{{ $tenant->name }}</option>@endforeach
-                                            </select>
+                        <div x-show="open" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center px-4" x-transition>
+                            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm" @click="open = false"></div>
+                            
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+                                <div class="bg-blue-600 p-4 text-white flex justify-between items-center shadow-md">
+                                    <h3 class="font-bold uppercase tracking-wide text-xs">New Invoice & Proofs</h3>
+                                    <button @click="open = false" class="text-blue-200 hover:text-white">&times;</button>
+                                </div>
+                                <div class="p-5 overflow-y-auto">
+                                    <form action="{{ route('landlord.bill.store') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="grid grid-cols-2 gap-3 mb-4">
+                                            <div class="col-span-2">
+                                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tenant</label>
+                                                <select name="tenant_id" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm bg-gray-50 p-2 font-bold">
+                                                    @foreach($tenants as $tenant)<option value="{{ $tenant->id }}">{{ $tenant->name }}</option>@endforeach
+                                                </select>
+                                            </div>
+                                            <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Billing Month</label><input type="text" name="month" placeholder="Feb 2026" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2" required></div>
+                                            <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Due Date</label><input type="date" name="due_date" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2"></div>
                                         </div>
-                                        <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Billing Month</label><input type="text" name="month" placeholder="Feb 2026" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2" required></div>
-                                        <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Due Date</label><input type="date" name="due_date" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2"></div>
-                                    </div>
-                                    <div class="mb-4 flex gap-3">
-                                        <div class="w-1/3">
-                                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Currency</label>
-                                            <select name="currency" x-model="currency" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2 font-bold text-blue-800 dark:text-blue-400"><option value="USD">USD ($)</option><option value="PKR">PKR (₨)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
+                                        <div class="mb-4 flex gap-3">
+                                            <div class="w-1/3">
+                                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Currency</label>
+                                                <select name="currency" x-model="currency" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2 font-bold text-blue-800 dark:text-blue-400"><option value="USD">USD ($)</option><option value="PKR">PKR (₨)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
+                                            </div>
+                                            <div class="w-2/3"><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Base Rent</label><input type="number" x-model="rent" name="rent" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2 font-bold" required></div>
                                         </div>
-                                        <div class="w-2/3"><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Base Rent</label><input type="number" x-model="rent" name="rent" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2 font-bold" required></div>
-                                    </div>
-                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 mb-4">
-                                        <div class="flex justify-between items-center mb-3">
-                                            <span class="text-xs font-bold text-blue-800 dark:text-blue-300">Utilities & Proofs</span>
-                                            <select x-model="selectedUtility" @change="if(selectedUtility) { if(selectedUtility=='elec') showElec=true; if(selectedUtility=='water') showWater=true; if(selectedUtility=='gas') showGas=true; if(selectedUtility=='net') showInternet=true; selectedUtility=''; }" class="text-[10px] border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded h-7 py-0 shadow-sm">
-                                                <option value="">+ Add Utility</option><option value="elec">Electricity</option><option value="water">Water</option><option value="gas">Gas</option><option value="net">Internet</option>
-                                            </select>
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 mb-4">
+                                            <div class="flex justify-between items-center mb-3">
+                                                <span class="text-xs font-bold text-blue-800 dark:text-blue-300">Utilities & Proofs</span>
+                                                <select x-model="selectedUtility" @change="if(selectedUtility) { if(selectedUtility=='elec') showElec=true; if(selectedUtility=='water') showWater=true; if(selectedUtility=='gas') showGas=true; if(selectedUtility=='net') showInternet=true; selectedUtility=''; }" class="text-[10px] border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded h-7 py-0 shadow-sm">
+                                                    <option value="">+ Add Utility</option><option value="elec">Electricity</option><option value="water">Water</option><option value="gas">Gas</option><option value="net">Internet</option>
+                                                </select>
+                                            </div>
+                                            <div class="space-y-3">
+                                                <template x-if="showElec"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-[10px]">⚡</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="electricity" x-model="elec" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="electricity_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showElec=false; elec=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
+                                                <template x-if="showWater"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">💧</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="water" x-model="water" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="water_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showWater=false; water=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
+                                                <template x-if="showGas"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-[10px]">🔥</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="gas" x-model="gas" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="gas_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showGas=false; gas=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
+                                                <template x-if="showInternet"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-[10px]">📶</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="internet" x-model="internet" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="internet_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showInternet=false; internet=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
+                                            </div>
                                         </div>
-                                        <div class="space-y-3">
-                                            <template x-if="showElec"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-[10px]">⚡</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="electricity" x-model="elec" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="electricity_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showElec=false; elec=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
-                                            <template x-if="showWater"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">💧</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="water" x-model="water" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="water_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showWater=false; water=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
-                                            <template x-if="showGas"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-[10px]">🔥</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="gas" x-model="gas" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="gas_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showGas=false; gas=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
-                                            <template x-if="showInternet"><div class="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm"><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-[10px]">📶</div><div class="flex-1"><label class="text-[9px] font-bold text-gray-400 block uppercase">Cost</label><input type="number" name="internet" x-model="internet" class="w-full h-6 text-xs border-0 p-0 focus:ring-0 font-bold dark:bg-gray-700 dark:text-white"></div><div class="flex-1 border-l dark:border-gray-600 pl-2"><label class="text-[9px] font-bold text-gray-400 block uppercase">Proof</label><input type="file" name="internet_proof" class="text-[9px] w-full dark:text-gray-300"></div><button type="button" @click="showInternet=false; internet=0" class="text-red-400 hover:text-red-600">&times;</button></div></template>
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Maintenance</label><input type="number" x-model="maintenance" name="maintenance" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2" placeholder="0"></div>
+                                            <div><label class="block text-[10px] font-bold text-red-400 uppercase mb-1">Arrears (Debt)</label><input type="number" x-model="arrears" name="arrears" class="w-full border-red-200 bg-red-50 dark:bg-red-900/30 dark:border-red-900 text-red-700 dark:text-red-400 font-bold rounded-lg text-sm p-2" placeholder="0"></div>
+                                            <div class="col-span-2"><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Notes / Remarks</label><textarea name="notes" rows="2" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-xs p-2" placeholder="Add remarks..."></textarea></div>
                                         </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-3 mb-3">
-                                        <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Maintenance</label><input type="number" x-model="maintenance" name="maintenance" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm p-2" placeholder="0"></div>
-                                        <div><label class="block text-[10px] font-bold text-red-400 uppercase mb-1">Arrears (Debt)</label><input type="number" x-model="arrears" name="arrears" class="w-full border-red-200 bg-red-50 dark:bg-red-900/30 dark:border-red-900 text-red-700 dark:text-red-400 font-bold rounded-lg text-sm p-2" placeholder="0"></div>
-                                        <div class="col-span-2"><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Notes / Remarks</label><textarea name="notes" rows="2" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-xs p-2" placeholder="Add remarks..."></textarea></div>
-                                    </div>
-                                    <div class="bg-gray-900 dark:bg-black text-white p-4 rounded-xl flex justify-between items-center shadow-lg"><div class="text-xs text-gray-400 font-medium">Grand Total</div><div class="text-xl font-black" x-text="symbol + grandTotal"></div></div>
-                                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm mt-4 shadow-lg transform hover:scale-[1.01] transition">Confirm & Generate</button>
-                                </form>
+                                        <div class="bg-gray-900 dark:bg-black text-white p-4 rounded-xl flex justify-between items-center shadow-lg"><div class="text-xs text-gray-400 font-medium">Grand Total</div><div class="text-xl font-black" x-text="symbol + grandTotal"></div></div>
+                                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm mt-4 shadow-lg transform hover:scale-[1.01] transition">Confirm & Generate</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
