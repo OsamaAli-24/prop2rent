@@ -85,8 +85,7 @@
 
                     <div class="mt-8 text-center border-t border-gray-100 pt-4">
                         <p class="text-xs text-gray-500">
-                            Don't have an account? 
-                            <a href="{{ route('register') }}" class="font-bold text-blue-600 hover:text-blue-800">Create one</a>
+                           
                         </p>
                     </div>
                 </div>

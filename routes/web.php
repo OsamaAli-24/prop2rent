@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LandlordController;
 use App\Http\Controllers\TenantController;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\File;
 /*
-|--------------------------------------------------------------------------
+|--------------------------------------------------------------------------zxqxs
 | Web Routes
 |--------------------------------------------------------------------------
 */
@@ -77,5 +78,24 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::patch('/profile/theme', [ProfileController::class, 'updateTheme'])->name('profile.theme');
 });
+
+Route::get('/storage/{path}', function ($path) {
+    // 1. Find the file in the private folder
+    $path = storage_path('app/public/' . $path);
+
+    // 2. If file doesn't exist, error 404
+    if (!File::exists($path)) {
+        abort(404);
+    }
+
+    // 3. Serve the file (Fake it as a public file)
+    $file = File::get($path);
+    $type = File::mimeType($path);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+})->where('path', '.*');
 
 require __DIR__.'/auth.php';

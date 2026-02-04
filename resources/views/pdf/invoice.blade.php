@@ -24,6 +24,11 @@
         .bg-green { background-color: #2ecc71; }
         .bg-red { background-color: #e74c3c; }
         .bg-yellow { background-color: #f1c40f; color: #333; }
+        
+        /* Image Style */
+        .proof-section { margin-top: 30px; text-align: center; border-top: 2px dashed #eee; padding-top: 20px; }
+        .proof-img { max-width: 300px; max-height: 400px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; }
+        .error-msg { color: red; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -141,6 +146,31 @@
         <br>
         @if($bill->notes)
             <p style="font-size: 12px; font-style: italic; color: #888;"><strong>Note:</strong> {{ $bill->notes }}</p>
+        @endif
+
+        @if($bill->payment_proof)
+            <div class="proof-section">
+                <h4 style="margin-bottom: 10px; color: #555; text-transform: uppercase; font-size: 12px;">Attached Proof of Payment</h4>
+                
+                @php
+                    // 1. Locate the file on the hard drive
+                    $imagePath = storage_path('app/public/' . $bill->payment_proof);
+                    
+                    // 2. Read the file data
+                    $imageData = null;
+                    if(file_exists($imagePath)) {
+                        $imageData = base64_encode(file_get_contents($imagePath));
+                        $extension = pathinfo($imagePath, PATHINFO_EXTENSION);
+                        $src = 'data:image/' . $extension . ';base64,' . $imageData;
+                    }
+                @endphp
+
+                @if($imageData)
+                    <img src="{{ $src }}" class="proof-img">
+                @else
+                    <p class="error-msg">Image file not found on server.</p>
+                @endif
+            </div>
         @endif
         <p style="text-align: center; font-size: 12px; margin-top: 30px;">Thank you for your timely payment.</p>
     </div>
