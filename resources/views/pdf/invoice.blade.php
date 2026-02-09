@@ -152,24 +152,42 @@
             <div class="proof-section">
                 <h4 style="margin-bottom: 10px; color: #555; text-transform: uppercase; font-size: 12px;">Attached Proof of Payment</h4>
                 
-                @php
-                    // 1. Locate the file on the hard drive
-                    $imagePath = storage_path('app/public/' . $bill->payment_proof);
-                    
-                    // 2. Read the file data
-                    $imageData = null;
-                    if(file_exists($imagePath)) {
-                        $imageData = base64_encode(file_get_contents($imagePath));
-                        $extension = pathinfo($imagePath, PATHINFO_EXTENSION);
-                        $src = 'data:image/' . $extension . ';base64,' . $imageData;
-                    }
-                @endphp
+    @php
+    // Get just the filename (in case database has "receipts/image.jpg")
+    $filename = basename($bill->payment_proof);
 
-                @if($imageData)
-                    <img src="{{ $src }}" class="proof-img">
-                @else
-                    <p class="error-msg">Image file not found on server.</p>
-                @endif
+    // List of places to look for the file on the hard drive
+    $paths_to_check = [
+        base_path('storage/app/public/receipts/' . $filename),
+        base_path('storage/app/public/payment_proofs/' . $filename),
+        storage_path('app/public/receipts/' . $filename),
+        public_path('storage/receipts/' . $filename)
+    ];
+
+    $src = '';
+    foreach ($paths_to_check as $path) {
+        if (file_exists($path)) {
+            // Encode image to Base64
+            $imageData = base64_encode(file_get_contents($path));
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            $src = 'data:image/' . $extension . ';base64,' . $imageData;
+            break;
+        }
+    }
+@endphp
+
+@if($src)
+    <div class="proof-section">
+        <h4>Attached Proof of Payment</h4>
+        <img src="{{ $src }}" class="proof-img" style="max-width:300px;">
+    </div>
+@else
+    <p style="color:red; font-size:10px;">
+        Image not found.<br>
+        Looking for: {{ $filename }}<br>
+        Inside: storage/app/public/receipts/
+    </p>
+@endif
             </div>
         @endif
         <p style="text-align: center; font-size: 12px; margin-top: 30px;">Thank you for your timely payment.</p>
