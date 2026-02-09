@@ -22,6 +22,7 @@ Route::get('/dashboard', function () {
     // 1. If user is a Landlord, redirect to their panel
     if (Auth::user()->role === 'landlord') {
         return redirect()->route('landlord.dashboard');
+        Route::view('/settings', 'landlord.settings')->name('settings');
     }
     
     // 2. If user is a Tenant, let the Controller handle the math
